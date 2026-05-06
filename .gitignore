@@ -16,6 +16,7 @@ build/
 health_pipeline/target/
 health_pipeline/logs/
 health_pipeline/dbt_packages/
+health_pipeline/.user.yml
 
 # Jupyter
 .ipynb_checkpoints/
