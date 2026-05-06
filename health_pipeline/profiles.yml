@@ -1,0 +1,7 @@
+health_pipeline:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ../data/healthdata.duckdb
+      threads: 4

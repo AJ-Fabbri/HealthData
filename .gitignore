@@ -1,0 +1,31 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+
+.claude/
+
+# dbt
+health_pipeline/target/
+health_pipeline/logs/
+health_pipeline/dbt_packages/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+
+# Data — personal exports and built database (not included in repo)
+data/
+data_dictionary.md
+HealthData Notes/
+logs/
+chats/

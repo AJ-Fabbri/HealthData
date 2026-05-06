@@ -1,0 +1,117 @@
+version: 2
+
+sources:
+  - name: garmin
+    schema: raw
+    description: >
+      Raw Garmin Connect export tables loaded by scripts/ingest.py.
+      Source: Garmin bulk JSON export (Garmin_All_Apr4), exported 2026-04-04.
+
+    tables:
+      - name: garmin__health_status
+        description: >
+          Daily health metrics in long format (5 rows per day × ~200 days = ~1,000 rows).
+          Metrics: HRV (rMSSD ms), HR (resting bpm), SPO2 (not collected), SKIN_TEMP_C
+          (delta from baseline), RESPIRATION (br/min). Date range: 2025-09-17 – 2026-04-04.
+          Pivot to wide in stg_garmin__health_status.
+        columns:
+          - name: calendar_date
+            description: ISO date string. Join key to other Garmin day-grain sources.
+          - name: metric_type
+            description: "One of: HRV, HR, SPO2, SKIN_TEMP_C, RESPIRATION."
+          - name: status
+            description: "UNKNOWN (setup day), ONBOARDING (first ~week), IN_RANGE, ABOVE, BELOW."
+
+      - name: garmin__sleep
+        description: >
+          One row per night of sleep (2,195 rows, 2020-04-02 – 2026-04-04).
+          sleepScores sub-object flattened to sleep_score_* columns.
+          ~62% of records lack enhanced metrics (older firmware).
+        columns:
+          - name: calendar_date
+            description: Morning date (not night-start). Natural key.
+          - name: sleep_window_confirmation_type
+            description: "Quality gate. Filter OUT: OFF_WRIST, UNCONFIRMED."
+
+      - name: garmin__daily_summary
+        description: >
+          One row per calendar day of wellness summary (2,194 rows, 2020-04-02 – 2026-04-04).
+          allDayStress, bodyBattery, respiration, and hydration sub-objects flattened.
+        columns:
+          - name: calendar_date
+            description: ISO date string. Natural key.
+
+      - name: garmin__activities
+        description: >
+          One row per Garmin-recorded activity (1,260 rows, ~2020 – Apr 2026).
+          Timestamps (begin_timestamp, start_time_gmt, start_time_local) are epoch milliseconds.
+          No shared activity ID with Strava — join via timestamp proximity.
+        columns:
+          - name: activity_id
+            description: Garmin internal activity ID. Natural key within Garmin.
+          - name: begin_timestamp
+            description: Activity start as Unix epoch milliseconds.
+
+      - name: garmin__training_readiness
+        description: >
+          Training Readiness assessments (1,397 rows, 2023-12-25 – 2026-04-04).
+          Multiple records per calendar day — dedupe to one per day in staging.
+          Levels: NONE (calibrating), POOR, LOW, MODERATE, HIGH, PRIME.
+        columns:
+          - name: calendar_date
+            description: ISO date string. Multiple rows per date — dedupe on latest timestamp.
+          - name: level
+            description: Readiness tier. Filter out NONE (device calibration period).
+          - name: input_context
+            description: "What triggered the assessment: AFTER_WAKEUP_RESET, AFTER_POST_EXERCISE_RESET, UPDATE_REALTIME_VARIABLES."
+
+      - name: garmin__training_load
+        description: >
+          Daily ACWR training load snapshots (1,431 rows, 2023-11-27 – 2026-04-03).
+          calendar_date and timestamp stored as Unix epoch milliseconds (not ISO strings).
+        columns:
+          - name: calendar_date
+            description: Calendar date as Unix epoch milliseconds. Convert to date in staging.
+
+      - name: garmin__training_status
+        description: >
+          Daily training status assessments (3,906 rows, 2020-04-09 – 2026-04-04).
+          Multiple records per day — dedupe to latest per calendar_date in staging.
+        columns:
+          - name: calendar_date
+            description: ISO date string. Multiple rows per date — dedupe on latest timestamp.
+
+      - name: garmin__vo2max
+        description: >
+          VO2 max estimate updates (611 rows, 2020-04-16 – 2026-03-28).
+          Multiple records per day possible (one per qualifying activity).
+          88% have null sport/sub_sport — general rolling estimates.
+        columns:
+          - name: calendar_date
+            description: ISO date string. Multiple rows per date possible.
+
+      - name: garmin__endurance_score
+        description: >
+          Daily endurance score assessments (867 rows).
+          calendar_date_ms and timestamp_ms are Unix epoch milliseconds.
+          Contributor array extracted to cycling_contribution, running_contribution,
+          hiking_walking_contribution, other_aerobic_contribution columns.
+        columns:
+          - name: calendar_date_ms
+            description: Calendar date as Unix epoch milliseconds. Convert to date in staging.
+
+      - name: garmin__hill_score
+        description: >
+          Daily hill score assessments (867 rows).
+          calendar_date and timestamp stored as Unix epoch milliseconds.
+        columns:
+          - name: calendar_date
+            description: Calendar date as Unix epoch milliseconds. Convert to date in staging.
+
+      - name: garmin__run_race_predictions
+        description: >
+          Race time predictions (2,261 rows, ~2023-11 – 2026-04).
+          Multiple records per day — dedupe to latest in staging. Times in seconds.
+        columns:
+          - name: calendar_date
+            description: ISO date string. Multiple rows per date — dedupe on latest timestamp.

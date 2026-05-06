@@ -1,0 +1,34 @@
+version: 2
+
+sources:
+  - name: strava
+    schema: raw
+    description: >
+      Raw Strava export tables loaded by scripts/ingest.py.
+      Source: Strava bulk CSV export (activities.csv).
+    tables:
+      - name: strava__activities
+        description: >
+          One row per recorded Strava activity (1,386 rows, May 2018 – Apr 2026).
+          Duplicate CSV column names (Elapsed Time, Distance, Max Heart Rate,
+          Relative Effort, Commute) have been resolved — the first (summary)
+          occurrence carries a _summary suffix; the second (detailed) occurrence
+          is the canonical column. Dates have been parsed to started_at (timestamp)
+          and activity_date (date).
+        columns:
+          - name: activity_id
+            description: Natural key. Globally unique Strava activity identifier.
+          - name: started_at
+            description: Activity start timestamp in local time (no UTC offset stored).
+          - name: activity_date
+            description: Date portion of started_at (local date).
+          - name: activity_type
+            description: "Activity sport type: Ride, Run, Weight Training, Alpine Ski, etc."
+          - name: elapsed_time
+            description: Wall-clock duration in seconds (detailed stream — more precise than elapsed_time_summary).
+          - name: distance
+            description: Total distance in meters (detailed stream).
+          - name: average_watts
+            description: >
+              Mean power output in watts. For rides, this is Strava's speed/gradient/weight
+              estimate — NOT a raw power meter reading. Null for all non-ride activities.
