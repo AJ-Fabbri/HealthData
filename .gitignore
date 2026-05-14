@@ -25,7 +25,9 @@ health_pipeline/.user.yml
 .DS_Store
 
 # Data — personal exports and built database (not included in repo)
-data/
+# Exclude everything in data/ except the synthetic demo database
+data/*
+!data/healthdata_synthetic.duckdb
 data_dictionary.md
 HealthData Notes/
 logs/

@@ -56,11 +56,6 @@ def _build_conditions(
     return conditions, params
 
 
-# ---------------------------------------------------------------------------
-# Pre-built query tools
-# ---------------------------------------------------------------------------
-
-
 @tool
 def query_activities(
     sport_type: Optional[str] = None,
@@ -187,7 +182,7 @@ def query_daily_health(
     limit: int = 20,
 ) -> dict:
     """
-    Return the daily health time series — one row per calendar day including
+    Return the daily health time series: one row per calendar day including
     rest days. Use for health trends, HRV, sleep, body battery, stress.
 
     Parameters
@@ -329,10 +324,6 @@ def query_daily_health(
     return {"count": total, "aggregates": aggregates, "days": days}
 
 
-# ---------------------------------------------------------------------------
-# Chart generation
-# ---------------------------------------------------------------------------
-
 _CHART_CONFIGS: dict[str, dict] = {
     "activity": {
         "table": "main_marts.fct_activity",
@@ -372,8 +363,8 @@ _CHART_CONFIGS: dict[str, dict] = {
         "name_col": "activity_name",
         "has_sport_filter": False,
         "metrics": {
-            "pace_min_per_km": ("ROUND(pace_min_per_km, 2)", "Pace (min/km) — lower is faster"),
-            "gap_min_per_km": ("ROUND(gap_min_per_km, 2)", "Grade-Adjusted Pace (min/km) — lower is faster"),
+            "pace_min_per_km": ("ROUND(pace_min_per_km, 2)", "Pace (min/km) - lower is faster"),
+            "gap_min_per_km": ("ROUND(gap_min_per_km, 2)", "Grade-Adjusted Pace (min/km) - lower is faster"),
         },
     },
     "ride_power": {
@@ -510,7 +501,7 @@ def generate_chart(
             hovertemplate="%{x|%Y-%m-%d}<br>Rolling avg: %{y}<extra></extra>",
         ))
 
-    sport_label = f" — {sport_type}" if sport_type and sport_type.lower() != "all" else ""
+    sport_label = f" - {sport_type}" if sport_type and sport_type.lower() != "all" else ""
     date_range = ""
     if start_date or end_date:
         lo = start_date or rows_df["date"].min().strftime("%Y-%m-%d")
@@ -533,6 +524,6 @@ def generate_chart(
     n = len(rows_df)
     return {
         "_chart_json": fig.to_json(),
-        "summary": f"Chart: {title} — {n} data point{'s' if n != 1 else ''} from {d_min} to {d_max}.",
+        "summary": f"Chart: {title} - {n} data point{'s' if n != 1 else ''} from {d_min} to {d_max}.",
         "data_points": n,
     }

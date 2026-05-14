@@ -43,11 +43,12 @@ from langchain_core.messages import (
 from langgraph.errors import GraphRecursionError
 
 from main import _RECURSION_LIMIT, build_agent
+from agent.db import has_personal_data
 
 def _strip_reasoning(messages: list) -> list:
     """Remove reasoning_content from AIMessage additional_kwargs before storing.
 
-    CoT tokens are only useful during the generation step — keeping them in
+    CoT tokens are only useful during the generation step - keeping them in
     history wastes context window on every subsequent turn.
     """
     cleaned = []
@@ -80,17 +81,10 @@ def _extract_charts(messages) -> list:
 CHATS_DIR = os.path.join(os.path.dirname(__file__), "chats")
 os.makedirs(CHATS_DIR, exist_ok=True)
 
-# ---------------------------------------------------------------------------
-# Page config
-# ---------------------------------------------------------------------------
 st.set_page_config(
     page_title="HealthData Agent",
     layout="centered",
 )
-
-# ---------------------------------------------------------------------------
-# Chat persistence helpers
-# ---------------------------------------------------------------------------
 
 def _chat_path(chat_id: str) -> str:
     return os.path.join(CHATS_DIR, f"{chat_id}.json")
@@ -148,13 +142,17 @@ def _title_from_messages(messages: list[BaseMessage]) -> str:
     return "New chat"
 
 
-# ---------------------------------------------------------------------------
-# Session state initialisation
-# ---------------------------------------------------------------------------
 if "chat_id" not in st.session_state:
     st.session_state.chat_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
 if "history" not in st.session_state:
     st.session_state.history: list[BaseMessage] = []
+
+# Initialize dataset selection: prefer synthetic if personal data missing, else use env default
+if "use_synthetic" not in st.session_state:
+    if not has_personal_data():
+        st.session_state.use_synthetic = True
+    else:
+        st.session_state.use_synthetic = os.getenv("USE_SYNTHETIC_DATA", "").lower() == "true"
 
 # Bump whenever tools.py changes to force the cached agent to rebuild.
 _TOOLS_VERSION = "4"
@@ -165,9 +163,6 @@ _TOOL_LABELS: dict[str, str] = {
     "generate_chart": "Generating chart",
 }
 
-# ---------------------------------------------------------------------------
-# Cached agent — rebuilt only when provider/connection settings or tool version change
-# ---------------------------------------------------------------------------
 @st.cache_resource(show_spinner="Connecting to model…")
 def get_agent(provider: str, url: str, mdl: str, api_key: str, _version: str):
     if provider == "anthropic" and api_key:
@@ -175,9 +170,6 @@ def get_agent(provider: str, url: str, mdl: str, api_key: str, _version: str):
     return build_agent(provider=provider, base_url=url or None, model=mdl or None)
 
 
-# ---------------------------------------------------------------------------
-# Sidebar
-# ---------------------------------------------------------------------------
 with st.sidebar:
     st.title("HealthData Agent")
 
@@ -218,6 +210,22 @@ with st.sidebar:
     agent = get_agent(provider, base_url, model, api_key, _TOOLS_VERSION)
 
     st.divider()
+
+    # Data source selector
+    has_personal = has_personal_data()
+    if has_personal:
+        selection = st.selectbox(
+            "Data source",
+            options=["Personal", "Demo (Synthetic)"],
+            index=1 if st.session_state.use_synthetic else 0,
+        )
+        use_synthetic = selection == "Demo (Synthetic)"
+        if use_synthetic != st.session_state.use_synthetic:
+            st.session_state.use_synthetic = use_synthetic
+            os.environ["USE_SYNTHETIC_DATA"] = "true" if use_synthetic else "false"
+            st.rerun()
+    else:
+        st.info("Using demo dataset. Provide your own Strava + Garmin exports to use personal data.")
 
     # New chat button
     if st.button("＋  New chat", width='stretch'):
@@ -261,11 +269,9 @@ with st.sidebar:
 
     st.divider()
     provider_label = "Anthropic" if provider == "anthropic" else "LM Studio"
-    st.caption(f"Data: Strava + Garmin · 2018–2026  \nPowered by {provider_label} + LangGraph")
+    data_label = "Demo" if st.session_state.use_synthetic else "Personal"
+    st.caption(f"Data: {data_label} dataset  \nPowered by {provider_label} + LangGraph")
 
-# ---------------------------------------------------------------------------
-# Main — render conversation
-# ---------------------------------------------------------------------------
 st.title("HealthData Agent")
 st.caption("Ask questions about your training data in plain English.")
 
@@ -277,9 +283,6 @@ for msg in st.session_state.history:
         with st.chat_message("assistant"):
             st.markdown(_content_str(msg.content).strip())
 
-# ---------------------------------------------------------------------------
-# Chat input
-# ---------------------------------------------------------------------------
 if prompt := st.chat_input("Ask about your training…"):
     with st.chat_message("user"):
         st.markdown(prompt)

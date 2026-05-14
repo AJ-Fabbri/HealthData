@@ -2,7 +2,7 @@
 LLM provider factory supporting LM Studio and Anthropic.
 
 LM Studio exposes an OpenAI-compatible REST API at http://localhost:1234/v1
-by default. No real API key is required — any non-empty string works.
+by default. No real API key is required - any non-empty string works.
 
 Anthropic uses the official API via langchain_anthropic. Set ANTHROPIC_API_KEY
 in the environment before use.

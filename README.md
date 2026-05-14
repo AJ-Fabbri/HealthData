@@ -1,6 +1,6 @@
 # HealthData: Analytics Engineering & Agentic AI Platform (Strava + Garmin data)
 
-> **Status:** Active personal project, not a finished library. Data not currently included. A synthetic data generator (scripts/generate_sample_data.py) is planned to provide a working demo dataset without requiring personal exports.
+> **Status:** Active personal project. Includes a synthetic dataset generator for demos and online deployment.
 
 **Two main elements:**
 Agentic LLM interface: 8 years of personal training data, queryable in plain English.
@@ -45,6 +45,16 @@ streamlit run app.py
 ```
 
 Switch between Anthropic and LM Studio in the sidebar. Chat history auto-saves to `chats/`.
+
+### Running with Demo Data
+
+A synthetic dataset is included (`data/healthdata_synthetic.duckdb`) with ~160 activities and 365 days of daily metrics. To use it:
+
+```bash
+USE_SYNTHETIC_DATA=true streamlit run app.py
+```
+
+The demo data is self-contained—no setup needed. The generator script (`scripts/generate_sample_data.py`) shows how it was created and can be re-run to generate fresh data anytime.
 
 ---
 

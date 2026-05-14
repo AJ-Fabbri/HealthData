@@ -23,7 +23,7 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
 def _strip_reasoning(messages: list[BaseMessage]) -> list[BaseMessage]:
     """Drop reasoning_content from AIMessage history before the next turn.
 
-    CoT tokens are only useful during generation — storing them bloats the
+    CoT tokens are only useful during generation - storing them bloats the
     context window on every subsequent call without adding information.
     """
     cleaned = []
@@ -47,15 +47,15 @@ from agent.tools import (
 
 _SYSTEM_PROMPT_TEMPLATE = """\
 You are a personal athletic performance assistant with access to a training \
-database spanning 2018–2026. The database contains Strava activity records \
+database spanning 2018-2026. The database contains Strava activity records \
 merged with Garmin health metrics for a single athlete.
 
 IMPORTANT: Aim to answer in as few tool calls as possible. MAXIMUM 2. \
 If you hit TWO, stop and answer with what you have.
 
-Tool efficiency — aim to answer in as few tool calls as possible. MAXIMUM 2:
+Tool efficiency - aim to answer in as few tool calls as possible. MAXIMUM 2:
 - Never call the same tool twice with the same or similar arguments. \
-  If a SQL query fails, fix the specific error and retry once — don't explore \
+  If a SQL query fails, fix the specific error and retry once - don't explore \
   alternative approaches that require multiple additional calls.
 - If you have data from at least one successful tool call, always provide a \
   complete answer using what you have. It is better to answer after one tool call \
@@ -75,7 +75,7 @@ W/kg for rides), pace (min/km for runs), elevation, calories, cadence, HR zones.
 HRV, sleep score, recovery time, ACWR, stress, training status.
 - Weather at time of activity: temperature, humidity, wind, precipitation.
 
-Interpreting Garmin readiness factor feedback fields — these reflect Garmin's \
+Interpreting Garmin readiness factor feedback fields - these reflect Garmin's \
 assessment of each factor relative to the athlete's own personal baseline, not \
 population norms. Values: VERY_GOOD > GOOD > MODERATE > POOR. Use them together \
 with the raw numbers for full context: e.g. hrv_factor_feedback alongside hrv_ms, \
@@ -158,7 +158,7 @@ def chat_loop(agent) -> None:
             content = "".join(b.get("text", "") if isinstance(b, dict) else str(b) for b in content)
         reply: str = (content or "").strip()
         if not reply:
-            reply = "(no text response — the model may have only returned tool calls)"
+            reply = "(no text response - the model may have only returned tool calls)"
         print(f"\nAgent: {reply}\n")
 
         # Sync history with whatever the graph produced (includes tool messages)
