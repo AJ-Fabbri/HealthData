@@ -2,6 +2,8 @@
 
 > **Status:** Active personal project. Includes a synthetic dataset generator for demos and online deployment.
 
+> **Demo App Link:** [https://healthdata-chat.streamlit.app](https://healthdata-chat.streamlit.app)
+
 **Two main elements:**
 Agentic LLM interface: 8 years of personal training data, queryable in plain English.
 
@@ -69,7 +71,7 @@ The demo data is **self-contained with no setup needed**. The generator script (
 
 ### Cloud Deployment (Streamlit Cloud)
 
-The app is optimized for deployment to [Streamlit Cloud](https://streamlit.io/cloud):
+The app is optimized for deployment to [Streamlit Cloud](https://healthdata-chat.streamlit.app):
 
 1. Push this repository to GitHub
 2. Create a new Streamlit app pointing to `app.py`

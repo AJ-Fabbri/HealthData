@@ -189,16 +189,17 @@ with st.sidebar:
     # Model provider settings (collapsed by default)
     if is_deployed:
         # Cloud deployment: Anthropic only, no provider selector
+        # Never pre-fill from environment (prevents showing previous user's key)
         with st.expander("API settings", expanded=False):
             api_key = st.text_input(
                 "Anthropic API key",
-                value=os.environ.get("ANTHROPIC_API_KEY", ""),
+                value="",
                 type="password",
                 help="Get yours at console.anthropic.com. Stored only in this session.",
             )
             model = st.text_input(
                 "Model",
-                value=os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5"),
+                value="claude-sonnet-4-6",
                 help="e.g. claude-haiku-4-5 or claude-sonnet-4-6",
             )
         provider = "anthropic"

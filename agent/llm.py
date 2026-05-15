@@ -76,7 +76,8 @@ def build_llm(
             or os.environ.get("ANTHROPIC_MODEL")
             or ANTHROPIC_DEFAULT_MODEL
         )
-        resolved_api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
+        # Use provided api_key. Never fall back to os.environ (prevents stale keys on Streamlit Cloud)
+        resolved_api_key = api_key
         return ChatAnthropic(
             model=resolved_model,
             api_key=resolved_api_key,
