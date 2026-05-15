@@ -468,7 +468,8 @@ def generate_chart(
             params,
         ).fetchdf()
     except Exception as exc:
-        return {"error": str(exc)}
+        import traceback
+        return {"error": f"Chart query failed: {exc}\n{traceback.format_exc()}"}
 
     rows_df = rows_df.dropna(subset=["value"])
     if rows_df.empty:

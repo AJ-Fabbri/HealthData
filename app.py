@@ -199,7 +199,7 @@ with st.sidebar:
             )
             model = st.text_input(
                 "Model",
-                value="claude-sonnet-4-6",
+                value="claude-haiku-4-5",
                 help="e.g. claude-haiku-4-5 or claude-sonnet-4-6",
             )
         provider = "anthropic"
@@ -333,7 +333,18 @@ if not st.session_state.history:
     st.markdown("---")
     st.write("Or type your own question below.")
 
-for msg in st.session_state.history:
+# Display chat history, but skip the last AI message if it's the one we're about to respond to
+messages_to_show = st.session_state.history
+if (
+    messages_to_show
+    and isinstance(messages_to_show[-1], AIMessage)
+    and len(messages_to_show) > 1
+    and isinstance(messages_to_show[-2], HumanMessage)
+):
+    # Skip the last AI message; it will be replaced by the new response below
+    messages_to_show = messages_to_show[:-1]
+
+for msg in messages_to_show:
     if isinstance(msg, HumanMessage):
         with st.chat_message("user"):
             st.markdown(_content_str(msg.content))
