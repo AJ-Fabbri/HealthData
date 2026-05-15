@@ -166,12 +166,21 @@ _TOOL_LABELS: dict[str, str] = {
     "generate_chart": "Generating chart",
 }
 
-@st.cache_resource(show_spinner="Connecting to model…")
 def get_agent(provider: str, url: str, mdl: str, api_key: str, _version: str):
-    # On cloud, don't set env vars (prevents key leakage between users)
-    if not is_deployed and provider == "anthropic" and api_key:
-        os.environ["ANTHROPIC_API_KEY"] = api_key
-    return build_agent(provider=provider, base_url=url or None, model=mdl or None)
+    """Build agent. Cached locally but NOT on cloud (prevents cross-user key leakage)."""
+
+    # On cloud, never cache — each user gets a fresh agent with their own key
+    if is_deployed:
+        return build_agent(provider=provider, base_url=url or None, model=mdl or None, api_key=api_key)
+
+    # Locally, use cache for performance
+    @st.cache_resource(show_spinner="Connecting to model…")
+    def _get_agent_cached(provider: str, url: str, mdl: str, api_key: str, _version: str):
+        if provider == "anthropic" and api_key:
+            os.environ["ANTHROPIC_API_KEY"] = api_key
+        return build_agent(provider=provider, base_url=url or None, model=mdl or None, api_key=api_key)
+
+    return _get_agent_cached(provider, url, mdl, api_key, _version)
 
 
 with st.sidebar:

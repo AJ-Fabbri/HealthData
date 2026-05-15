@@ -38,6 +38,7 @@ def build_llm(
     provider: str | None = None,
     base_url: str | None = None,
     model: str | None = None,
+    api_key: str | None = None,
     temperature: float = 0.3,
     **kwargs,
 ) -> BaseChatModel:
@@ -75,8 +76,10 @@ def build_llm(
             or os.environ.get("ANTHROPIC_MODEL")
             or ANTHROPIC_DEFAULT_MODEL
         )
+        resolved_api_key = api_key or os.environ.get("ANTHROPIC_API_KEY")
         return ChatAnthropic(
             model=resolved_model,
+            api_key=resolved_api_key,
             temperature=temperature,
             **kwargs,
         )

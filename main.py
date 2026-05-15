@@ -107,10 +107,10 @@ def _get_max_date() -> str:
         return "2026-04-04"
 
 
-def build_agent(provider: str | None, base_url: str | None, model: str | None):
+def build_agent(provider: str | None, base_url: str | None, model: str | None, api_key: str | None = None):
     max_date = _get_max_date()
     system_prompt = _SYSTEM_PROMPT_TEMPLATE.format(max_date=max_date)
-    llm = build_llm(provider=provider, base_url=base_url, model=model)
+    llm = build_llm(provider=provider, base_url=base_url, model=model, api_key=api_key)
     return create_agent(llm, TOOLS, system_prompt=system_prompt, middleware=[])
 
 
