@@ -158,6 +158,7 @@ is_deployed = "STREAMLIT_DEPLOYMENT_ID" in os.environ
 if "use_synthetic" not in st.session_state:
     if is_deployed or not has_personal_data():
         st.session_state.use_synthetic = True
+        os.environ["USE_SYNTHETIC_DATA"] = "true"  # Set env var for get_conn()
     else:
         st.session_state.use_synthetic = os.getenv("USE_SYNTHETIC_DATA", "").lower() == "true"
 
