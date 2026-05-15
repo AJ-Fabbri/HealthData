@@ -188,8 +188,8 @@ with st.sidebar:
             )
             model = st.text_input(
                 "Model",
-                value=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
-                help="e.g. claude-sonnet-4-6 or claude-opus-4-7",
+                value=os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5"),
+                help="e.g. claude-haiku-4-5 or claude-sonnet-4-6",
             )
         provider = "anthropic"
         base_url = ""
@@ -211,8 +211,8 @@ with st.sidebar:
                 )
                 model = st.text_input(
                     "Model",
-                    value=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
-                    help="e.g. claude-sonnet-4-6 or claude-opus-4-7",
+                    value=os.environ.get("ANTHROPIC_MODEL", "claude-haiku-4-5"),
+                    help="e.g. claude-haiku-4-5 or claude-sonnet-4-6",
                 )
                 base_url = ""
             else:
