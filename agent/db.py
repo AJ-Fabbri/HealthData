@@ -28,16 +28,22 @@ def get_conn() -> duckdb.DuckDBPyConnection:
 
     # Check if cached connection matches current path
     if not hasattr(_thread_local, "conn") or not hasattr(_thread_local, "path"):
-        _thread_local.conn = duckdb.connect(db_path, read_only=True)
-        _thread_local.path = db_path
+        try:
+            _thread_local.conn = duckdb.connect(db_path, read_only=True)
+            _thread_local.path = db_path
+        except Exception as e:
+            raise RuntimeError(f"Failed to connect to database at {db_path}: {e}")
     elif _thread_local.path != db_path:
         # Database path changed; close old connection and open new one
         try:
             _thread_local.conn.close()
         except Exception:
             pass
-        _thread_local.conn = duckdb.connect(db_path, read_only=True)
-        _thread_local.path = db_path
+        try:
+            _thread_local.conn = duckdb.connect(db_path, read_only=True)
+            _thread_local.path = db_path
+        except Exception as e:
+            raise RuntimeError(f"Failed to connect to database at {db_path}: {e}")
 
     return _thread_local.conn
 
