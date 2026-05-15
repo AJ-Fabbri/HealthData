@@ -42,6 +42,10 @@ from langchain_core.messages import (
 
 from langgraph.errors import GraphRecursionError
 
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent))
+
 from main import _RECURSION_LIMIT, build_agent
 from agent.db import has_personal_data
 
