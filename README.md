@@ -32,6 +32,7 @@ The agent calls up to three tools per query, combining workout-level data with d
 | -------------------- | ------------------- | -------------------------------------------------------------------- |
 | `query_activities`   | `fct_activity` mart | Workout-specific questions: pace, power, distance, effort            |
 | `query_daily_health` | `int_garmin__daily` | Health and recovery trends, rest days, HRV/sleep/readiness over time |
+| `generate_chart`     | `fct_activity`, `fct_ride`, `fct_run`, `int_garmin__daily` | Time-series visualizations: activity metrics (power, pace, distance), health trends (HRV, sleep, readiness), run pace progression, race predictions |
 
 
 ### Setup
@@ -48,13 +49,38 @@ Switch between Anthropic and LM Studio in the sidebar. Chat history auto-saves t
 
 ### Running with Demo Data
 
-A synthetic dataset is included (`data/healthdata_synthetic.duckdb`) with ~160 activities and 365 days of daily metrics. To use it:
+A **synthetic dataset** is included (`data/healthdata_synthetic.duckdb`) with realistic athlete data: ~200 activities and 365 days of daily metrics. Perfect for testing without personal data.
+
+To use the demo dataset locally:
 
 ```bash
 USE_SYNTHETIC_DATA=true streamlit run app.py
 ```
 
-The demo data is self-contained—no setup needed. The generator script (`scripts/generate_sample_data.py`) shows how it was created and can be re-run to generate fresh data anytime.
+**What's in the synthetic dataset:**
+- ~200 mixed activities (cycling, running, hiking, skiing, walking) with realistic distributions per activity type
+- 365 days of daily summaries (steps, activity minutes, body battery, stress)
+- Complete HRV, resting heart rate, and sleep metrics for pattern analysis
+- Training readiness and training status scores
+- Statistically grounded ranges: 40±12 km cycling, 10±2.5 km running, realistic heart rate zones per activity type
+
+The demo data is **self-contained with no setup needed**. The generator script (`scripts/generate_sample_data.py`) shows how it was created and can be re-run to generate fresh data anytime.
+
+### Cloud Deployment (Streamlit Cloud)
+
+The app is optimized for deployment to [Streamlit Cloud](https://streamlit.io/cloud):
+
+1. Push this repository to GitHub
+2. Create a new Streamlit app pointing to `app.py`
+3. Set your `ANTHROPIC_API_KEY` in Streamlit Cloud secrets
+4. Deploy
+
+On Streamlit Cloud, the app automatically:
+- Uses the synthetic demo dataset (Strava/Garmin imports disabled)
+- Enables Anthropic as the only LLM provider
+- Keeps chats ephemeral (session-only, not persisted)
+
+Each user brings their own API key—no shared credentials needed. Perfect for trying the agent without setting up local infrastructure.
 
 ---
 

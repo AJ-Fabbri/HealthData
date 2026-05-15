@@ -147,9 +147,12 @@ if "chat_id" not in st.session_state:
 if "history" not in st.session_state:
     st.session_state.history: list[BaseMessage] = []
 
+# Detect if running on Streamlit Cloud
+is_deployed = "STREAMLIT_DEPLOYMENT_ID" in os.environ
+
 # Initialize dataset selection: prefer synthetic if personal data missing, else use env default
 if "use_synthetic" not in st.session_state:
-    if not has_personal_data():
+    if is_deployed or not has_personal_data():
         st.session_state.use_synthetic = True
     else:
         st.session_state.use_synthetic = os.getenv("USE_SYNTHETIC_DATA", "").lower() == "true"
@@ -174,14 +177,9 @@ with st.sidebar:
     st.title("HealthData Agent")
 
     # Model provider settings (collapsed by default)
-    with st.expander("Model settings", expanded=False):
-        provider = st.selectbox(
-            "Provider",
-            options=["lmstudio", "anthropic"],
-            index=0 if os.environ.get("LLM_PROVIDER", "lmstudio") == "lmstudio" else 1,
-        )
-
-        if provider == "anthropic":
+    if is_deployed:
+        # Cloud deployment: Anthropic only, no provider selector
+        with st.expander("API settings", expanded=False):
             api_key = st.text_input(
                 "Anthropic API key",
                 value=os.environ.get("ANTHROPIC_API_KEY", ""),
@@ -193,39 +191,65 @@ with st.sidebar:
                 value=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
                 help="e.g. claude-sonnet-4-6 or claude-opus-4-7",
             )
-            base_url = ""
-        else:
-            api_key = ""
-            base_url = st.text_input(
-                "Base URL",
-                value=os.environ.get("LM_STUDIO_BASE_URL", "http://localhost:1234/v1"),
-                help="Change to point at a remote LM Studio instance.",
+        provider = "anthropic"
+        base_url = ""
+    else:
+        # Local development: show both providers
+        with st.expander("Model settings", expanded=False):
+            provider = st.selectbox(
+                "Provider",
+                options=["lmstudio", "anthropic"],
+                index=0 if os.environ.get("LLM_PROVIDER", "lmstudio") == "lmstudio" else 1,
             )
-            model = st.text_input(
-                "Model name",
-                value=os.environ.get("LM_STUDIO_MODEL", "local-model"),
-                help="Must match the identifier shown in LM Studio.",
-            )
+
+            if provider == "anthropic":
+                api_key = st.text_input(
+                    "Anthropic API key",
+                    value=os.environ.get("ANTHROPIC_API_KEY", ""),
+                    type="password",
+                    help="Get yours at console.anthropic.com. Stored only in this session.",
+                )
+                model = st.text_input(
+                    "Model",
+                    value=os.environ.get("ANTHROPIC_MODEL", "claude-sonnet-4-6"),
+                    help="e.g. claude-sonnet-4-6 or claude-opus-4-7",
+                )
+                base_url = ""
+            else:
+                api_key = ""
+                base_url = st.text_input(
+                    "Base URL",
+                    value=os.environ.get("LM_STUDIO_BASE_URL", "http://localhost:1234/v1"),
+                    help="Change to point at a remote LM Studio instance.",
+                )
+                model = st.text_input(
+                    "Model name",
+                    value=os.environ.get("LM_STUDIO_MODEL", "local-model"),
+                    help="Must match the identifier shown in LM Studio.",
+                )
 
     agent = get_agent(provider, base_url, model, api_key, _TOOLS_VERSION)
 
     st.divider()
 
-    # Data source selector
-    has_personal = has_personal_data()
-    if has_personal:
-        selection = st.selectbox(
-            "Data source",
-            options=["Personal", "Demo (Synthetic)"],
-            index=1 if st.session_state.use_synthetic else 0,
-        )
-        use_synthetic = selection == "Demo (Synthetic)"
-        if use_synthetic != st.session_state.use_synthetic:
-            st.session_state.use_synthetic = use_synthetic
-            os.environ["USE_SYNTHETIC_DATA"] = "true" if use_synthetic else "false"
-            st.rerun()
+    # Data source selector (local only; cloud always uses synthetic)
+    if not is_deployed:
+        has_personal = has_personal_data()
+        if has_personal:
+            selection = st.selectbox(
+                "Data source",
+                options=["Personal", "Demo (Synthetic)"],
+                index=1 if st.session_state.use_synthetic else 0,
+            )
+            use_synthetic = selection == "Demo (Synthetic)"
+            if use_synthetic != st.session_state.use_synthetic:
+                st.session_state.use_synthetic = use_synthetic
+                os.environ["USE_SYNTHETIC_DATA"] = "true" if use_synthetic else "false"
+                st.rerun()
+        else:
+            st.info("Using synthetic demo dataset. Personal data functionality is available if you clone and run the app locally.")
     else:
-        st.info("Using demo dataset. Provide your own Strava + Garmin exports to use personal data.")
+        st.caption("Using synthetic demo dataset")
 
     # New chat button
     if st.button("＋  New chat", width='stretch'):
@@ -275,6 +299,28 @@ with st.sidebar:
 st.title("HealthData Agent")
 st.caption("Ask questions about your training data in plain English.")
 
+# Empty state with example queries
+if not st.session_state.history:
+    st.markdown("---")
+    st.markdown("### Try asking about your training:")
+
+    examples = [
+        "What was my longest run this month?",
+        "Show me my weekly activity breakdown",
+        "How many hours did I train last week?",
+        "What's my average pace?",
+    ]
+
+    cols = st.columns(2)
+    for i, example in enumerate(examples):
+        col = cols[i % 2]
+        if col.button(example, key=f"example_{i}", use_container_width=True):
+            st.session_state.pending_query = example
+            st.rerun()
+
+    st.markdown("---")
+    st.write("Or type your own question below.")
+
 for msg in st.session_state.history:
     if isinstance(msg, HumanMessage):
         with st.chat_message("user"):
@@ -283,7 +329,18 @@ for msg in st.session_state.history:
         with st.chat_message("assistant"):
             st.markdown(_content_str(msg.content).strip())
 
-if prompt := st.chat_input("Ask about your training…"):
+# Check for pending example query
+if st.session_state.get("pending_query"):
+    prompt = st.session_state.pending_query
+    del st.session_state.pending_query
+else:
+    prompt = None
+
+# Always show the chat input (use pending query if available)
+if not prompt:
+    prompt = st.chat_input("Ask about your training…")
+
+if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
 
