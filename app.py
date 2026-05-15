@@ -168,7 +168,8 @@ _TOOL_LABELS: dict[str, str] = {
 
 @st.cache_resource(show_spinner="Connecting to model…")
 def get_agent(provider: str, url: str, mdl: str, api_key: str, _version: str):
-    if provider == "anthropic" and api_key:
+    # On cloud, don't set env vars (prevents key leakage between users)
+    if not is_deployed and provider == "anthropic" and api_key:
         os.environ["ANTHROPIC_API_KEY"] = api_key
     return build_agent(provider=provider, base_url=url or None, model=mdl or None)
 
@@ -251,9 +252,9 @@ with st.sidebar:
     else:
         st.caption("Using synthetic demo dataset")
 
-    # New chat button
+    # New chat button (disable persistence on cloud for security)
     if st.button("＋  New chat", width='stretch'):
-        if st.session_state.history:
+        if st.session_state.history and not is_deployed:
             save_chat(
                 st.session_state.chat_id,
                 _title_from_messages(st.session_state.history),
@@ -265,31 +266,32 @@ with st.sidebar:
 
     st.divider()
 
-    # Saved chats list
-    saved = list_chats()
-    if saved:
-        st.caption("Recent chats")
-        for chat in saved:
-            col_btn, col_del = st.columns([5, 1])
-            is_active = chat["id"] == st.session_state.chat_id
-            label = ("**" + chat["title"] + "**") if is_active else chat["title"]
-            if col_btn.button(label, key=f"load_{chat['id']}", width='stretch'):
-                if st.session_state.history:
-                    save_chat(
-                        st.session_state.chat_id,
-                        _title_from_messages(st.session_state.history),
-                        st.session_state.history,
-                    )
-                _, msgs = load_chat(chat["id"])
-                st.session_state.chat_id = chat["id"]
-                st.session_state.history = msgs
-                st.rerun()
-            if col_del.button("✕", key=f"del_{chat['id']}"):
-                delete_chat(chat["id"])
-                if chat["id"] == st.session_state.chat_id:
-                    st.session_state.chat_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-                    st.session_state.history = []
-                st.rerun()
+    # Saved chats list (local only; disabled on cloud for security/privacy)
+    if not is_deployed:
+        saved = list_chats()
+        if saved:
+            st.caption("Recent chats")
+            for chat in saved:
+                col_btn, col_del = st.columns([5, 1])
+                is_active = chat["id"] == st.session_state.chat_id
+                label = ("**" + chat["title"] + "**") if is_active else chat["title"]
+                if col_btn.button(label, key=f"load_{chat['id']}", width='stretch'):
+                    if st.session_state.history:
+                        save_chat(
+                            st.session_state.chat_id,
+                            _title_from_messages(st.session_state.history),
+                            st.session_state.history,
+                        )
+                    _, msgs = load_chat(chat["id"])
+                    st.session_state.chat_id = chat["id"]
+                    st.session_state.history = msgs
+                    st.rerun()
+                if col_del.button("✕", key=f"del_{chat['id']}"):
+                    delete_chat(chat["id"])
+                    if chat["id"] == st.session_state.chat_id:
+                        st.session_state.chat_id = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+                        st.session_state.history = []
+                    st.rerun()
 
     st.divider()
     provider_label = "Anthropic" if provider == "anthropic" else "LM Studio"
@@ -449,9 +451,10 @@ if prompt:
 
     st.session_state.history = _strip_reasoning(result["messages"])
 
-    # Auto-save after every reply
-    save_chat(
-        st.session_state.chat_id,
-        _title_from_messages(st.session_state.history),
-        st.session_state.history,
-    )
+    # Auto-save after every reply (local only; disabled on cloud for privacy)
+    if not is_deployed:
+        save_chat(
+            st.session_state.chat_id,
+            _title_from_messages(st.session_state.history),
+            st.session_state.history,
+        )

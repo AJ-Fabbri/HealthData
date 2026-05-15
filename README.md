@@ -28,10 +28,10 @@ The agent calls up to three tools per query, combining workout-level data with d
 ### Tools
 
 
-| Tool                 | Data source         | Use for                                                              |
-| -------------------- | ------------------- | -------------------------------------------------------------------- |
-| `query_activities`   | `fct_activity` mart | Workout-specific questions: pace, power, distance, effort            |
-| `query_daily_health` | `int_garmin__daily` | Health and recovery trends, rest days, HRV/sleep/readiness over time |
+| Tool                 | Data source                                                | Use for                                                                                                                                             |
+| -------------------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `query_activities`   | `fct_activity` mart                                        | Workout-specific questions: pace, power, distance, effort                                                                                           |
+| `query_daily_health` | `int_garmin__daily`                                        | Health and recovery trends, rest days, HRV/sleep/readiness over time                                                                                |
 | `generate_chart`     | `fct_activity`, `fct_ride`, `fct_run`, `int_garmin__daily` | Time-series visualizations: activity metrics (power, pace, distance), health trends (HRV, sleep, readiness), run pace progression, race predictions |
 
 
@@ -58,6 +58,7 @@ USE_SYNTHETIC_DATA=true streamlit run app.py
 ```
 
 **What's in the synthetic dataset:**
+
 - ~200 mixed activities (cycling, running, hiking, skiing, walking) with realistic distributions per activity type
 - 365 days of daily summaries (steps, activity minutes, body battery, stress)
 - Complete HRV, resting heart rate, and sleep metrics for pattern analysis
@@ -76,6 +77,7 @@ The app is optimized for deployment to [Streamlit Cloud](https://streamlit.io/cl
 4. Deploy
 
 On Streamlit Cloud, the app automatically:
+
 - Uses the synthetic demo dataset (Strava/Garmin imports disabled)
 - Enables Anthropic as the only LLM provider
 - Keeps chats ephemeral (session-only, not persisted)
