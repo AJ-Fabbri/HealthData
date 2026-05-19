@@ -84,7 +84,7 @@ On Streamlit Cloud, the app automatically:
 - Enables Anthropic as the only LLM provider
 - Keeps chats ephemeral (session-only, not persisted)
 
-Each user brings their own API key—no shared credentials needed. Perfect for trying the agent without setting up local infrastructure.
+Each user brings their own API key, which is never stored on the server. 
 
 ---
 
@@ -116,14 +116,14 @@ A separate statistical analysis on top of the same dbt pipeline, asking: *how we
 
 Model B explains 25% of in-sample variance and generalises (CV R²=+0.115). The gap between OLS and CV R² reflects moderate overfitting. Model A's OLS R²=0.023 with CV R²=−0.089 is telling: readiness has a moderately significant association (p=0.07) but zero standalone predictive power.
 
-Two predictors drive nearly all the lift from A to B:
+Two significant predictors:
 
 - **Hour of day** (β≈+3.1 W/hour, p<0.0001): later rides produce more power, likely reflecting circadian rhythm, caffeine, and warmup
 - **Wind speed** (β≈+4.1 W per m/s, p=0.009): windier conditions mean higher recorded watts
 
 Readiness survives the addition of these context variables with a stable coefficient (β≈+0.27–0.28 W per point in both Models A and B, p≈0.07–0.08), confirming it's not proxying for weather or time of day. Across the full 0–100 score range that's ~28 W.
 
-Model C's most interesting finding: none of the five raw readiness components reach individual significance, yet collectively they outperform the composite. Because the composite captures something that no single ingredient recovers in a simple linear model, we can assume that Garmin's aggregation does some useful work. All VIFs < 2, so multicollinearity isn't the explanation.
+Model C's most interesting finding: none of the five raw readiness components reach individual significance, yet collectively they outperform the composite. Because the composite captures something that no single ingredient recovers in a simple linear model, we can assume that Garmin's aggregation does some useful work. All VIF scores are under 2, so multicollinearity isn't the explanation.
 
 **Runs (n=66–74):** OLS R² reaches 0.28–0.38 across models, but CV R² is negative throughout; the models are overfit. With 66 observations and 11 predictors, coefficient estimates are unreliable. The only strong signal is rain (β≈−1.2 min/km).
 

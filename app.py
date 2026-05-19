@@ -176,7 +176,7 @@ _TOOL_LABELS: dict[str, str] = {
 def get_agent(provider: str, url: str, mdl: str, api_key: str, _version: str):
     """Build agent. Cached locally but NOT on cloud (prevents cross-user key leakage)."""
 
-    # On cloud, never cache — each user gets a fresh agent with their own key
+    # On cloud, never cache. Each user gets a fresh agent with their own key
     if is_deployed:
         return build_agent(provider=provider, base_url=url or None, model=mdl or None, api_key=api_key)
 
@@ -486,3 +486,4 @@ if prompt:
             _title_from_messages(st.session_state.history),
             st.session_state.history,
         )
+        
